@@ -9,7 +9,7 @@ from ltr.data.image_loader import jpeg4py_loader
 from ltr.admin.environment import env_settings
 
 
-class Pedestrain(BaseVideoDataset):
+class PedestrainDataset(BaseVideoDataset):
     """ Pedestrain dataset.
     
     This dataset consists of pedestrian tracking sequences organized in a similar
@@ -27,7 +27,7 @@ class Pedestrain(BaseVideoDataset):
             data_fraction - Fraction of dataset to be used. The complete dataset is used by default.
         """
         root = env_settings().pedestrain_dir if root is None else root
-        super().__init__('Pedestrain', root, image_loader)
+        super().__init__('PedestrainDataset', root, image_loader)
         
         # Get all sequences
         self.sequence_list = self._get_sequence_list()

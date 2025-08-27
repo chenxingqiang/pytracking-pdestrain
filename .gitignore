@@ -14,3 +14,6 @@ pytracking/segmentation_results/
 pytracking/result_plots/
 pytracking/evaluation/local.py
 pytracking/run_local.py
+pedestrain/*
+checkpoints/*
+logs/*

@@ -346,12 +346,17 @@ def transform_box_to_crop(box: torch.Tensor, crop_box: torch.Tensor, crop_sz: to
     """
 
     box_out = box.clone()
-    box_out[:2] -= crop_box[:2]
+    
+    # Mac M3兼容性：确保只处理前4个维度 [x, y, w, h]
+    if box_out.shape[-1] > 4:
+        box_out = box_out[..., :4]
+    
+    box_out[..., :2] -= crop_box[:2]
 
     scale_factor = crop_sz / crop_box[2:]
 
-    box_out[:2] *= scale_factor
-    box_out[2:] *= scale_factor
+    box_out[..., :2] *= scale_factor
+    box_out[..., 2:4] *= scale_factor
     return box_out
 
 

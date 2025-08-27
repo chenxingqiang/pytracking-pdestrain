@@ -1,7 +1,12 @@
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from ltr.external.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
+try:
+    from ltr.external.PreciseRoIPooling.pytorch.prroi_pool import PrRoIPool2D
+except ImportError:
+    # Mac M3兼容性：如果PreciseRoIPooling编译失败，使用兼容版本
+    from ltr.models.layers.roi_pool_mac import PrRoIPool2D
+    print("⚠️  PreciseRoIPooling不可用，使用Mac兼容版本")
 from ltr.models.layers.blocks import conv_block
 import math
 

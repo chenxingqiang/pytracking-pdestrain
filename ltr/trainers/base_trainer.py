@@ -31,7 +31,20 @@ class BaseTrainer:
 
         self.device = getattr(settings, 'device', None)
         if self.device is None:
-            self.device = torch.device("cuda:0" if torch.cuda.is_available() and settings.use_gpu else "cpu")
+            if settings.use_gpu:
+                # 优先级: MPS > CUDA > CPU (针对Mac M3优化)
+                if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available() and torch.backends.mps.is_built():
+                    self.device = torch.device("mps")
+                    print(f"使用MPS设备进行训练 (Mac M3优化)")
+                elif torch.cuda.is_available():
+                    self.device = torch.device("cuda:0")
+                    print(f"使用CUDA设备进行训练: cuda:0")
+                else:
+                    self.device = torch.device("cpu")
+                    print(f"使用CPU进行训练")
+            else:
+                self.device = torch.device("cpu")
+                print(f"使用CPU进行训练")
 
         self.actor.to(self.device)
 
