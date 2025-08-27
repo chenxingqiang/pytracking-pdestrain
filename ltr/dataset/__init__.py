@@ -19,3 +19,4 @@ from .lasot_candidate_matching import LasotCandidateMatching
 from .coco_mot_seq import MSCOCOMOTSeq
 from .imagenetvid_mot import ImagenetVIDMOT
 from .tao_burst import TAOBURST
+from .pedestrain import Pedestrain
