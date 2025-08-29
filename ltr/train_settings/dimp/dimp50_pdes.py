@@ -1,3 +1,4 @@
+import os
 import torch.nn as nn
 import torch.optim as optim
 from ltr.dataset import PdesDataset, Got10k, MSCOCOSeq
@@ -37,9 +38,27 @@ def run(settings):
     # 主要数据集：PdesDataset（行人数据集）
     pdes_train = PdesDataset(settings.env.pedestrain_dir, split='train')
     
-    # 辅助数据集：少量通用数据集增强训练
-    got10k_train = Got10k(settings.env.got10k_dir, split='vottrain', data_fraction=0.1)
-    coco_train = MSCOCOSeq(settings.env.coco_dir, data_fraction=0.05)
+    # 辅助数据集：仅在可用时加载，避免错误
+    datasets_train = [pdes_train]
+    dataset_weights = [1.0]
+    
+    try:
+        if hasattr(settings.env, 'got10k_dir') and settings.env.got10k_dir and os.path.exists(settings.env.got10k_dir):
+            got10k_train = Got10k(settings.env.got10k_dir, split='vottrain', data_fraction=0.1)
+            datasets_train.append(got10k_train)
+            dataset_weights.append(0.5)
+            print("✅ 加载GOT-10k辅助数据集")
+    except Exception as e:
+        print(f"⚠️  跳过GOT-10k数据集: {e}")
+    
+    try:
+        if hasattr(settings.env, 'coco_dir') and settings.env.coco_dir and os.path.exists(settings.env.coco_dir):
+            coco_train = MSCOCOSeq(settings.env.coco_dir, data_fraction=0.05)
+            datasets_train.append(coco_train)
+            dataset_weights.append(0.5)
+            print("✅ 加载COCO辅助数据集")
+    except Exception as e:
+        print(f"⚠️  跳过COCO数据集: {e}")
 
     # 验证数据集
     pdes_val = PdesDataset(settings.env.pedestrain_dir, split='val')
@@ -81,9 +100,9 @@ def run(settings):
                                                     joint_transform=transform_joint)
 
     # 训练采样器和加载器
-    dataset_train = sampler.DiMPSampler([pdes_train, got10k_train, coco_train], 
-                                        [3, 0.5, 0.5],
-                                        samples_per_epoch=100,  # 大幅减少样本数用于快速测试
+    dataset_train = sampler.DiMPSampler(datasets_train, 
+                                        dataset_weights,
+                                        samples_per_epoch=1000,  # 增加样本数以提供足够的训练数据
                                         max_gap=30, 
                                         num_test_frames=3, 
                                         num_train_frames=3,
@@ -96,7 +115,7 @@ def run(settings):
 
     # 验证采样器和加载器
     dataset_val = sampler.DiMPSampler([pdes_val], [1], 
-                                      samples_per_epoch=50,  # 减少验证样本数
+                                      samples_per_epoch=200,  # 增加验证样本数
                                       max_gap=30,
                                       num_test_frames=3, 
                                       num_train_frames=3,
